@@ -1,0 +1,467 @@
+You are the senior software architect and engineering assistant for this project.
+
+I am building this project from scratch:
+
+AUTONOMOUS AI-POWERED INCIDENT COMMANDER
+for Enterprise SRE & DevOps
+
+The goal is to build a working hackathon-quality full-stack application that demonstrates autonomous incident investigation, evidence correlation, RAG-based knowledge retrieval, explainable root-cause analysis, safe remediation recommendation, human approval, simulated remediation, recovery validation, and automatic postmortem generation.
+
+IMPORTANT:
+Do NOT build the entire application in one step.
+
+Build the system incrementally and wait for my instruction before moving to the next phase.
+
+==================================================
+TECHNOLOGY STACK
+================
+
+Frontend:
+
+* React
+* TypeScript
+* Tailwind CSS
+* Recharts
+* React Router
+
+Backend:
+
+* Python
+* FastAPI
+* Pydantic
+* SQLAlchemy
+
+Database:
+
+* SQLite for MVP
+* Design database layer so PostgreSQL can be introduced later
+
+AI:
+
+* LLM API
+* Embeddings
+* RAG
+* Python-based agent orchestration
+
+Infrastructure:
+
+* Docker
+* Docker Compose
+
+Testing:
+
+* Pytest
+* Vitest
+* React Testing Library
+
+==================================================
+CORE ARCHITECTURE
+=================
+
+Frontend
+↓
+FastAPI REST API
+↓
+Incident Engine
+↓
+AI Orchestrator
+↓
+Specialist Agents
+├── Triage Agent
+├── Log Analysis Agent
+├── Change Analysis Agent
+├── Knowledge/RAG Agent
+├── Root Cause Agent
+├── Remediation Agent
+├── Validation Agent
+└── Postmortem Agent
+↓
+Database / RAG / Simulation Layer
+
+==================================================
+CORE WORKFLOW
+=============
+
+Incident Alert
+↓
+Incident Triage
+↓
+Evidence Collection
+↓
+RAG Retrieval
+↓
+Evidence Correlation
+↓
+Root Cause Hypothesis
+↓
+Confidence Calculation
+↓
+Remediation Recommendation
+↓
+Human Approval
+↓
+Simulation / Controlled Action
+↓
+Recovery Validation
+↓
+Postmortem
+↓
+Knowledge Update
+
+==================================================
+IMPORTANT SAFETY RULE
+=====================
+
+The AI must NEVER directly execute dangerous or consequential production actions.
+
+Default mode:
+READ-ONLY INVESTIGATION
+
+Remediation must follow:
+
+Recommendation
+→ Risk Assessment
+→ Human Approval
+→ Allowlist Check
+→ Simulation
+→ Controlled Execution
+→ Validation
+→ Audit Log
+
+For the hackathon MVP, all remediation should operate against the simulated environment only.
+
+==================================================
+AI USAGE LIMIT
+==============
+
+Do not use an LLM for tasks that can be solved deterministically.
+
+Use normal Python code for:
+
+* database operations
+* CRUD operations
+* incident state management
+* severity calculations
+* metric calculations
+* threshold detection
+* timestamp handling
+* log parsing
+* API validation
+* authentication/authorization logic
+* audit logging
+* remediation allowlist validation
+* recovery calculations
+* deterministic business rules
+
+Use AI only where reasoning or language understanding provides real value:
+
+1. Log pattern interpretation
+2. Operational document understanding
+3. RAG question answering
+4. Evidence summarization
+5. Root-cause hypothesis generation
+6. Remediation explanation/recommendation
+7. Postmortem generation
+
+Do not send the entire database or all logs to the LLM.
+
+Retrieve and send only relevant evidence.
+
+Every AI response must contain structured output.
+
+Prefer JSON/Pydantic schemas over free-form text.
+
+==================================================
+AI OUTPUT REQUIREMENTS
+======================
+
+AI responses must never be treated as automatically correct.
+
+Every root-cause result must include:
+
+{
+"hypothesis": "...",
+"confidence": 0,
+"supporting_evidence": [],
+"contradicting_evidence": [],
+"reasoning_summary": "...",
+"recommended_next_check": "..."
+}
+
+Confidence must be clearly labeled as an AI-generated confidence estimate, not a guaranteed probability.
+
+==================================================
+EVIDENCE CHAIN
+==============
+
+Every important AI conclusion must reference evidence.
+
+Evidence may come from:
+
+* application logs
+* metrics
+* deployments
+* configuration changes
+* runbooks
+* architecture documentation
+* historical incidents
+
+Do not allow the AI to invent evidence.
+
+If sufficient evidence is unavailable, explicitly return:
+
+INSUFFICIENT_EVIDENCE
+
+==================================================
+DEMO INCIDENT
+=============
+
+Build the primary demo around an e-commerce Checkout Service.
+
+Healthy state:
+
+* low error rate
+* normal latency
+* normal database connection pool
+
+Failure:
+A deployment changes:
+
+DB_POOL_SIZE
+
+from:
+
+50
+
+to:
+
+10
+
+Under increased traffic, database connection-pool exhaustion occurs.
+
+Expected symptoms:
+
+* increased errors
+* increased latency
+* database connection timeout messages
+
+The system should correlate:
+
+Logs
++
+Deployment change
++
+Traffic metrics
++
+Historical incident
++
+Runbook
+
+and produce a root-cause hypothesis identifying the configuration change as the leading cause.
+
+Recommended remediation:
+
+Rollback DB_POOL_SIZE from 10 to 50.
+
+IMPORTANT:
+This is a simulated remediation for the MVP.
+
+==================================================
+DATABASE ENTITIES
+=================
+
+Create models for:
+
+Incident
+Service
+LogEvent
+Deployment
+Metric
+KnowledgeDocument
+Evidence
+Recommendation
+Action
+Postmortem
+
+Use proper foreign keys and timestamps.
+
+==================================================
+API
+===
+
+Implement:
+
+POST /incidents
+
+GET /incidents/{id}
+
+POST /incidents/{id}/investigate
+
+GET /incidents/{id}/evidence
+
+GET /incidents/{id}/recommendation
+
+POST /incidents/{id}/approve
+
+POST /incidents/{id}/simulate-fix
+
+GET /incidents/{id}/metrics
+
+POST /incidents/{id}/postmortem
+
+Also create appropriate health-check endpoints.
+
+==================================================
+FRONTEND
+========
+
+Create a professional SRE dashboard.
+
+Main views:
+
+1. Executive Incident Dashboard
+2. Incident Investigation
+3. Evidence Chain
+4. Root Cause
+5. Remediation
+6. Recovery
+7. Postmortem
+
+Dashboard should display:
+
+* incident ID
+* severity
+* service
+* status
+* error rate
+* latency
+* timeline
+* investigation progress
+* evidence
+* root-cause hypothesis
+* confidence
+* recommended action
+* risk
+* approval status
+* recovery metrics
+
+Use Recharts for operational metrics.
+
+==================================================
+UI DESIGN
+=========
+
+Create an enterprise SRE/DevOps visual style.
+
+Prioritize:
+
+* clarity
+* dense but readable operational information
+* incident severity indicators
+* timeline visualization
+* evidence traceability
+* clear approval controls
+* before/after metrics
+* responsive layout
+
+Do not create unnecessary decorative UI.
+
+==================================================
+DEVELOPMENT RULES
+=================
+
+Before writing code:
+
+1. Explain the architecture for the current phase.
+2. Show the directory structure.
+3. Identify files that will be created.
+4. Explain dependencies.
+5. Implement only the current phase.
+6. Run/build/test the implementation.
+7. Fix errors.
+8. Stop.
+
+DO NOT automatically continue to the next phase.
+
+When I say:
+
+"NEXT"
+
+continue to the next phase.
+
+When I say:
+
+"FIX"
+
+diagnose and fix the current phase.
+
+When I say:
+
+"EXPLAIN"
+
+explain the implementation without changing code.
+
+When I say:
+
+"TEST"
+
+run through the relevant tests and identify failures.
+
+==================================================
+CODE QUALITY
+============
+
+Use:
+
+* clean architecture
+* modular components
+* typed interfaces
+* environment variables for secrets
+* configuration files
+* logging
+* error handling
+* validation
+* reusable services
+* separation of concerns
+
+Never hard-code API keys.
+
+Use .env.example.
+
+Do not put secrets into source control.
+
+==================================================
+STARTING PHASE
+==============
+
+Start ONLY with PHASE 1:
+
+PROJECT FOUNDATION
+
+Create:
+
+/frontend
+/backend
+/database
+/simulation
+/knowledge
+/docker
+/docs
+
+Set up the React frontend and FastAPI backend.
+
+Create a basic health-check API.
+
+Create a basic frontend page that calls the health-check API.
+
+Create Docker configuration.
+
+Do NOT implement AI yet.
+
+Do NOT implement agents yet.
+
+Do NOT implement RAG yet.
+
+Do NOT implement remediation yet.
+
+After completing Phase 1, stop and wait for my "NEXT".

@@ -1,0 +1,1 @@
+- [Vite preview compatibility](vite-preview-compatibility.md) — Vite 5.4's typings do not accept `server.allowedHosts`; bind the dev server to `0.0.0.0` for Replit preview access.
