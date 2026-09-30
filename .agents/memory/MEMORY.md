@@ -1,1 +1,2 @@
 - [Vite preview compatibility](vite-preview-compatibility.md) — Vite 5.4's typings do not accept `server.allowedHosts`; bind the dev server to `0.0.0.0` for Replit preview access.
+- [SQLite configuration boundary](sqlite-configuration-boundary.md) — use the app-specific database URL variable so the SQLite MVP cannot accidentally target a platform PostgreSQL URL.

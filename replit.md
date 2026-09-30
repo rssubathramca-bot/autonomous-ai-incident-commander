@@ -9,6 +9,6 @@ The frontend calls `/api/health`. Vite proxies that path to the FastAPI `/health
 
 ## Phase 1 status
 
-The project foundation is complete: React + TypeScript + Tailwind, FastAPI health check, reserved architecture directories, and Docker portability files.
+Phase 2 is complete: SQLAlchemy SQLite models, Pydantic schemas, database initialization, migration-ready metadata, and seeded Checkout Service data.
 
-AI, agents, RAG, database entities, incident investigation, remediation, recovery, and postmortem features are intentionally deferred until the next requested phase.
+AI, agents, RAG, incident investigation, remediation, recovery, and automated postmortem generation remain intentionally deferred until the next requested phase.

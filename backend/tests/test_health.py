@@ -13,5 +13,5 @@ def test_health_check() -> None:
     assert response.json() == {
         "status": "ok",
         "service": "incident-commander-api",
-        "phase": "foundation",
+        "phase": "database",
     }
