@@ -1,0 +1,102 @@
+Gemini live generation is now confirmed working with:
+
+* Model: gemini-3.8-flash
+* GEMINI_API_KEY: configured
+* google-genai: working
+* Retries: disabled
+* Live generation: successful
+
+Now perform the FINAL Phase 6 end-to-end verification.
+
+Do NOT modify the Phase 6 architecture.
+
+Do NOT implement Phase 7.
+
+Use the existing synthetic Phase 4 incident scenario.
+
+The test must follow exactly:
+
+Phase 4 synthetic incident
+↓
+Simulation logs
+↓
+Simulation metrics
+↓
+Deployment/change evidence
+↓
+Phase 5 RAG retrieval
+↓
+Evidence package
+↓
+ONE Gemini root-cause analysis call
+↓
+Structured response validation
+↓
+Persist analysis
+
+Use the existing database-pool failure scenario.
+
+The evidence should include whatever is actually available from the existing Phase 4/Phase 5 implementation, such as:
+
+* database connection timeout errors
+* checkout error rate
+* latency changes
+* database pool state
+* deployment/change information
+* relevant RAG chunks
+
+Do NOT hard-code the root cause.
+
+Do NOT tell Gemini the expected answer separately.
+
+Gemini must receive the prepared evidence package and determine the hypothesis from the evidence.
+
+IMPORTANT AI LIMIT:
+
+Make exactly ONE Gemini generation call for this incident.
+
+Do not retry.
+
+Do not make separate calls for logs, metrics, RAG, or hypothesis generation.
+
+Python must perform those deterministic operations.
+
+Verify that the final Gemini response:
+
+1. Is valid structured JSON.
+2. Contains a primary hypothesis.
+3. Contains confidence between 0.0 and 1.0.
+4. Contains evidence IDs.
+5. Uses only evidence IDs that actually exist.
+6. Contains an evidence chain.
+7. Separates observations from hypotheses.
+8. Identifies missing evidence where appropriate.
+9. Does not contain invented evidence.
+10. Does not execute remediation.
+
+Also verify:
+
+* The analysis is persisted.
+* GET /incidents/{incident_id}/root-cause-analysis retrieves the stored result.
+* GET does NOT call Gemini again.
+* AI-call limit remains enforced.
+* GEMINI_API_KEY is never exposed.
+* No production infrastructure is contacted.
+
+Run the existing automated tests after the verification if they do not consume additional real Gemini API calls.
+
+Report:
+
+1. End-to-end test result.
+2. Incident ID used.
+3. Number of RAG chunks retrieved.
+4. Number of Gemini calls made.
+5. Whether structured validation passed.
+6. Whether analysis was persisted.
+7. Whether GET retrieval worked.
+8. Automated test count.
+9. Any failures or limitations.
+
+Do not run another live Gemini request after this test.
+
+STOP after reporting the results.
