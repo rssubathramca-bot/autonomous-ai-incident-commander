@@ -9,6 +9,6 @@ The frontend calls `/api/health`. Vite proxies that path to the FastAPI `/health
 
 ## Phase 1 status
 
-Phase 2 is complete: SQLAlchemy SQLite models, Pydantic schemas, database initialization, migration-ready metadata, and seeded Checkout Service data.
+Phase 3 is complete: SQLAlchemy SQLite models, Pydantic schemas, seeded Checkout Service data, deterministic incident lifecycle operations, severity thresholds, related-record ingestion, and timeline tracking.
 
 AI, agents, RAG, incident investigation, remediation, recovery, and automated postmortem generation remain intentionally deferred until the next requested phase.

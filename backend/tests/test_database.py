@@ -41,6 +41,8 @@ def test_checkout_seed_is_relational_and_idempotent() -> None:
         assert service is not None
         assert incident is not None
         assert incident.service is service
+        assert len(incident.timeline_events) == 1
+        assert incident.timeline_events[0].event_type == "incident_created"
         assert len(incident.log_events) == 4
         assert len(incident.deployments) == 1
         assert len(incident.metrics) == 10

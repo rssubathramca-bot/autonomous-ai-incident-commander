@@ -1,26 +1,27 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import SQLAlchemyError
-from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from .api.incidents import router as incidents_router
 from .db.session import get_db
 
 
 app = FastAPI(
     title="Incident Commander API",
     version="0.1.0",
-    description="Phase 2 database foundation API for the Autonomous AI-Powered Incident Commander.",
+    description="Deterministic Phase 3 incident engine API for the Autonomous AI-Powered Incident Commander.",
 )
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=False,
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST", "PATCH"],
     allow_headers=["*"],
 )
+app.include_router(incidents_router)
 
 
 @app.get("/health", tags=["system"])
@@ -29,7 +30,7 @@ def health() -> dict[str, str]:
     return {
         "status": "ok",
         "service": "incident-commander-api",
-        "phase": "database",
+        "phase": "incident-engine",
     }
 
 

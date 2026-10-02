@@ -1,7 +1,7 @@
-from datetime import datetime
-from typing import Any
+from datetime import datetime, timezone
+from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class DatabaseSchema(BaseModel):
@@ -47,6 +47,48 @@ class IncidentRead(IncidentBase, TimestampedRead):
     pass
 
 
+class IncidentSignals(DatabaseSchema):
+    error_rate_percent: float | None = Field(default=None, ge=0)
+    latency_ms: float | None = Field(default=None, ge=0)
+    db_pool_waiters: int | None = Field(default=None, ge=0)
+
+
+class IncidentCreate(DatabaseSchema):
+    service_id: int = Field(gt=0)
+    title: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1)
+    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    severity: Literal["SEV-1", "SEV-2", "SEV-3", "SEV-4"] | None = None
+    status: Literal["open", "investigating"] = "investigating"
+    signals: IncidentSignals = Field(default_factory=IncidentSignals)
+
+
+class IncidentStatusUpdate(DatabaseSchema):
+    status: Literal["open", "investigating", "mitigated", "resolved", "closed"]
+    note: str | None = Field(default=None, max_length=1000)
+
+
+class IncidentSeverityUpdate(DatabaseSchema):
+    signals: IncidentSignals
+
+
+class TimelineEventRead(TimestampedRead):
+    incident_id: int
+    occurred_at: datetime
+    event_type: str
+    summary: str
+    details: dict[str, Any]
+
+
+class IncidentDetail(IncidentRead):
+    service: ServiceRead
+    timeline: list[TimelineEventRead]
+    logs: list["LogEventRead"]
+    deployments: list["DeploymentRead"]
+    metrics: list["MetricRead"]
+    evidence: list["EvidenceRead"]
+
+
 class LogEventBase(DatabaseSchema):
     incident_id: int
     service_id: int
@@ -63,6 +105,14 @@ class LogEventCreate(LogEventBase):
 
 class LogEventRead(LogEventBase, TimestampedRead):
     pass
+
+
+class LogEventIngest(DatabaseSchema):
+    occurred_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    level: Literal["DEBUG", "INFO", "WARN", "WARNING", "ERROR", "CRITICAL"]
+    message: str = Field(min_length=1)
+    source: str = Field(min_length=1, max_length=120)
+    trace_id: str | None = Field(default=None, max_length=120)
 
 
 class DeploymentBase(DatabaseSchema):
@@ -84,6 +134,15 @@ class DeploymentRead(DeploymentBase, TimestampedRead):
     pass
 
 
+class DeploymentIngest(DatabaseSchema):
+    version: str = Field(min_length=1, max_length=80)
+    commit_sha: str = Field(min_length=1, max_length=64)
+    environment: str = Field(min_length=1, max_length=40)
+    deployed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    change_summary: str = Field(min_length=1)
+    config_changes: dict[str, Any] = Field(default_factory=dict)
+
+
 class MetricBase(DatabaseSchema):
     incident_id: int
     service_id: int
@@ -99,6 +158,13 @@ class MetricCreate(MetricBase):
 
 class MetricRead(MetricBase, TimestampedRead):
     pass
+
+
+class MetricIngest(DatabaseSchema):
+    recorded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    name: str = Field(min_length=1, max_length=100)
+    value: float
+    unit: str = Field(min_length=1, max_length=30)
 
 
 class KnowledgeDocumentBase(DatabaseSchema):
@@ -133,6 +199,29 @@ class EvidenceCreate(EvidenceBase):
 
 class EvidenceRead(EvidenceBase, TimestampedRead):
     pass
+
+
+class EvidenceIngest(DatabaseSchema):
+    evidence_type: str = Field(min_length=1, max_length=50)
+    summary: str = Field(min_length=1)
+    relevance_score: float | None = Field(default=None, ge=0, le=1)
+    log_event_id: int | None = Field(default=None, gt=0)
+    deployment_id: int | None = Field(default=None, gt=0)
+    metric_id: int | None = Field(default=None, gt=0)
+    knowledge_document_id: int | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def require_source_reference(self) -> "EvidenceIngest":
+        if not any(
+            (
+                self.log_event_id,
+                self.deployment_id,
+                self.metric_id,
+                self.knowledge_document_id,
+            )
+        ):
+            raise ValueError("Evidence must reference at least one source record.")
+        return self
 
 
 class RecommendationBase(DatabaseSchema):
@@ -188,3 +277,6 @@ class PostmortemCreate(PostmortemBase):
 
 class PostmortemRead(PostmortemBase, TimestampedRead):
     pass
+
+
+IncidentDetail.model_rebuild()

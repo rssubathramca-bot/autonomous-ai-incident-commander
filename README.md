@@ -2,7 +2,7 @@
 
 Hackathon-quality foundation for an enterprise SRE/DevOps incident investigation system.
 
-## Phase 2: Database foundation
+## Phase 3: Deterministic incident engine
 
 This phase contains:
 
@@ -13,6 +13,9 @@ This phase contains:
 - Pydantic create/read schemas
 - Idempotent Checkout Service seed data
 - Migration-ready SQLAlchemy metadata boundary
+- Deterministic incident create/retrieve, severity classification, and status transitions
+- Auditable incident timeline events
+- Log, deployment, metric, and evidence ingestion linked to incidents and services
 - Docker configuration for local portability
 
 AI orchestration, specialist agents, RAG, incident workflows, and remediation execution are intentionally not implemented yet.
@@ -35,6 +38,10 @@ python -m backend.app.db.init_db
 The default SQLite file is `database/incident_commander.db`. Set
 `INCIDENT_DATABASE_URL` to point at a future PostgreSQL or other SQLAlchemy-supported
 database.
+
+Incident API routes include `POST /incidents`, `GET /incidents/{id}`,
+`GET /incidents/{id}/evidence`, and `GET /incidents/{id}/metrics`. Deterministic status
+updates and record-ingestion routes are also available under `/incidents/{id}`.
 
 ## Run locally
 

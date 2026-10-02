@@ -39,7 +39,7 @@ function App() {
           <div>
             <div className="mb-4 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.24em] text-signal">
               <span className="h-2 w-2 rounded-full bg-signal shadow-[0_0_12px_rgba(65,214,167,0.9)]" />
-              Database / Phase 2
+              Incident Engine / Phase 3
             </div>
             <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
               Incident Commander
@@ -51,7 +51,7 @@ function App() {
           </div>
           <div className="rounded-lg border border-slate-800 bg-panel px-4 py-3 text-sm">
             <p className="text-slate-500">Operating mode</p>
-            <p className="mt-1 font-medium text-slate-200">Read-only data layer</p>
+            <p className="mt-1 font-medium text-slate-200">Deterministic operations</p>
           </div>
         </header>
 
@@ -113,7 +113,7 @@ function App() {
         </section>
 
         <footer className="border-t border-slate-800 pt-5 text-sm text-slate-500">
-          Phase 2 includes persistence and seed data; AI, agents, RAG, and remediation remain deferred.
+          Phase 3 adds deterministic incident lifecycle and evidence tracking; AI, agents, RAG, and remediation remain deferred.
         </footer>
       </div>
     </main>

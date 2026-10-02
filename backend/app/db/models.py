@@ -54,6 +54,11 @@ class Incident(TimestampMixin, Base):
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     service: Mapped[Service] = relationship(back_populates="incidents")
+    timeline_events: Mapped[list[IncidentTimelineEvent]] = relationship(
+        back_populates="incident",
+        cascade="all, delete-orphan",
+        order_by="IncidentTimelineEvent.occurred_at",
+    )
     log_events: Mapped[list[LogEvent]] = relationship(
         back_populates="incident",
         cascade="all, delete-orphan",
@@ -81,6 +86,23 @@ class Incident(TimestampMixin, Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
+
+
+class IncidentTimelineEvent(TimestampMixin, Base):
+    __tablename__ = "incident_timeline_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    incident_id: Mapped[int] = mapped_column(
+        ForeignKey("incidents.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(60), nullable=False)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    details: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+
+    incident: Mapped[Incident] = relationship(back_populates="timeline_events")
 
 
 class LogEvent(TimestampMixin, Base):

@@ -8,6 +8,7 @@ from .models import (
     Deployment,
     Evidence,
     Incident,
+    IncidentTimelineEvent,
     KnowledgeDocument,
     LogEvent,
     Metric,
@@ -45,6 +46,20 @@ def seed_demo_data(db: Session) -> bool:
         )
     )
     if existing_incident is not None:
+        if not existing_incident.timeline_events:
+            db.add(
+                IncidentTimelineEvent(
+                    incident=existing_incident,
+                    occurred_at=existing_incident.started_at,
+                    event_type="timeline_baseline",
+                    summary=(
+                        "Timeline baseline added; activity before timeline tracking "
+                        "was not recorded."
+                    ),
+                    details={"source": "phase3_seed_backfill"},
+                )
+            )
+            db.commit()
         return False
 
     now = datetime.now(timezone.utc).replace(microsecond=0)
@@ -61,6 +76,15 @@ def seed_demo_data(db: Session) -> bool:
     )
     db.add(incident)
     db.flush()
+    db.add(
+        IncidentTimelineEvent(
+            incident=incident,
+            occurred_at=incident.started_at,
+            event_type="incident_created",
+            summary="Synthetic Checkout Service incident created.",
+            details={"source": "synthetic_seed", "severity": incident.severity},
+        )
+    )
 
     deployment = Deployment(
         service=service,
