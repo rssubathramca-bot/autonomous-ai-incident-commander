@@ -44,16 +44,20 @@ Incident API routes include `POST /incidents`, `GET /incidents/{id}`,
 `GET /incidents/{id}/evidence`, and `GET /incidents/{id}/metrics`. Deterministic status
 updates and record-ingestion routes are also available under `/incidents/{id}`.
 
-Phase 6 adds `POST /incidents/analyze` with `{"incident_id": 1}`. It reads the
+Phase 6 adds `POST /incidents/{incident_id}/root-cause-analysis` and
+`GET /incidents/{incident_id}/root-cause-analysis`. It reads the
 incident's stored logs, metric series, deployment records, and linked evidence, then
 retrieves up to five relevant Phase 5 chunks by default before making one Gemini request.
+Validated results are stored in the existing application database; GET returns that
+stored result without another Gemini request or RAG generation. The legacy
+`POST /incidents/analyze` route remains available and uses the same persistence path.
 When the isolated Phase 4 simulator is running on its configured loopback port, the
 analysis also reads its read-only `/simulation/report`; it accepts that report only
 when `simulation_only` is true. If the simulator is stopped, the analysis reports
 that limitation and uses evidence already stored with the incident.
 Set `GEMINI_API_KEY` through Replit Secrets to enable fresh analyses; without it,
 the endpoint returns a safe configuration error and does not call Gemini. The model
-defaults to `gemini-2.5-flash` and can be changed with `GEMINI_MODEL`.
+uses the configured `GEMINI_MODEL` (the development default is `gemini-3.8-flash`).
 
 Input limits and cache behavior can be tuned with the `ROOT_CAUSE_*` values in
 `.env.example`. Identical evidence reuses a bounded, process-local cache for five

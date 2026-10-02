@@ -357,3 +357,16 @@ class Postmortem(TimestampMixin, Base):
     follow_up_items: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
 
     incident: Mapped[Incident] = relationship(back_populates="postmortem")
+
+
+class RootCauseAnalysisRecord(TimestampMixin, Base):
+    __tablename__ = "root_cause_analyses"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    incident_id: Mapped[int] = mapped_column(
+        ForeignKey("incidents.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)

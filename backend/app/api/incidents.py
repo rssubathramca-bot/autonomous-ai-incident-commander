@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from backend.app.db.models import RootCauseAnalysisRecord
 from backend.app.db.schemas import (
     DeploymentIngest,
     DeploymentRead,
@@ -72,13 +75,52 @@ def _raise_not_found(error: Exception) -> None:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
 
 
-@router.post("/analyze")
-def post_incident_analysis(
-    data: AnalysisRequest,
-    db: Session = Depends(get_db),
-) -> dict:
+def _saved_analysis_response(
+    db: Session,
+    incident_id: int,
+) -> dict | None:
+    record = db.scalar(
+        select(RootCauseAnalysisRecord).where(
+            RootCauseAnalysisRecord.incident_id == incident_id
+        )
+    )
+    if record is None:
+        return None
+    result = dict(record.payload)
+    result["ai_call_count"] = 0
+    result["cached"] = True
+    return result
+
+
+def _analyze_and_persist(db: Session, incident_id: int) -> dict:
+    saved = _saved_analysis_response(db, incident_id)
+    if saved is not None:
+        return saved
+
+    result = analyze_incident(db, incident_id)
+    db.add(
+        RootCauseAnalysisRecord(
+            incident_id=incident_id,
+            payload=result,
+        )
+    )
     try:
-        return analyze_incident(db, data.incident_id)
+        db.commit()
+    except IntegrityError:
+        # A concurrent request may have persisted the same incident while this
+        # request was completing. Return that validated result without another
+        # generation request.
+        db.rollback()
+        saved = _saved_analysis_response(db, incident_id)
+        if saved is None:
+            raise
+        return saved
+    return result
+
+
+def _analysis_error_response(db: Session, incident_id: int) -> dict:
+    try:
+        return _analyze_and_persist(db, incident_id)
     except IncidentNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -92,6 +134,43 @@ def post_incident_analysis(
             status_code=error.status_code,
             detail={"code": error.code, "message": error.public_message},
         ) from None
+
+
+@router.post("/{incident_id}/root-cause-analysis")
+def post_root_cause_analysis(
+    incident_id: int,
+    db: Session = Depends(get_db),
+) -> dict:
+    return _analysis_error_response(db, incident_id)
+
+
+@router.get("/{incident_id}/root-cause-analysis")
+def get_root_cause_analysis(
+    incident_id: int,
+    db: Session = Depends(get_db),
+) -> dict:
+    record = db.scalar(
+        select(RootCauseAnalysisRecord).where(
+            RootCauseAnalysisRecord.incident_id == incident_id
+        )
+    )
+    if record is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "root_cause_analysis_not_found",
+                "message": "No root-cause analysis exists for this incident.",
+            },
+        )
+    return record.payload
+
+
+@router.post("/analyze")
+def post_incident_analysis(
+    data: AnalysisRequest,
+    db: Session = Depends(get_db),
+) -> dict:
+    return _analysis_error_response(db, data.incident_id)
 
 
 @router.post("", response_model=IncidentDetail, status_code=status.HTTP_201_CREATED)

@@ -1,0 +1,160 @@
+Phase 6 is NOT complete. Do not implement Phase 7.
+
+The latest end-to-end verification produced:
+
+* Incident ID: 1
+* Seeded evidence: 4 logs, 10 metrics, 1 deployment, 5 evidence records
+* Phase 5 index: 10 chunks across 6 documents
+* Gemini generation attempts: exactly 1
+* Result: HTTP 502 from our application
+* Error: gemini_unavailable — "Gemini could not complete the analysis"
+* Automated tests: 42 passed
+* GET /incidents/1/root-cause-analysis: 404
+* Analysis persistence: currently unsupported
+
+Now diagnose and complete ONLY Phase 6.
+
+IMPORTANT:
+Do not blindly retry Gemini.
+Do not run another live Gemini request until the implementation problem has been identified and fixed.
+Do not change the Gemini model.
+Do not change the SDK.
+Do not expose GEMINI_API_KEY.
+Do not modify Phase 4.
+Do not modify Phase 5 architecture.
+Do not implement Phase 7.
+Do not add automatic remediation.
+
+First inspect the existing Phase 6 Gemini RCA implementation and determine why the real RCA request produces 502 even though the controlled "GEMINI_OK" generation test previously succeeded.
+
+Check specifically:
+
+1. The exact Gemini request construction.
+2. The model configured at runtime.
+3. The prompt sent to Gemini.
+4. The evidence package passed to Gemini.
+5. The requested response/JSON format.
+6. Any structured-output configuration.
+7. Any schema incompatibility with google-genai 2.8.0.
+8. Any exception handling that converts an upstream SDK/API error into the generic 502 gemini_unavailable.
+9. Whether the application is accidentally sending an invalid request.
+10. Whether the evidence package is too large or malformed.
+11. Whether the configured model differs between the successful GEMINI_OK test and the RCA endpoint.
+12. Whether the RCA endpoint is using a different Gemini client/configuration.
+
+Do not make speculative changes.
+
+After identifying the cause, make the smallest Phase-6-only fix necessary.
+
+Then add/update automated tests for the identified failure mode.
+
+PHASE 6 REQUIRED FUNCTIONALITY
+
+The final implementation must support:
+
+POST /incidents/{incident_id}/root-cause-analysis
+
+The endpoint must:
+
+1. Load the existing Phase 4 incident.
+2. Load deterministic logs, metrics, deployment/change evidence and existing evidence records.
+3. Perform Phase 5 RAG retrieval.
+4. Construct an evidence package.
+5. Make exactly ONE Gemini generation request.
+6. Never retry automatically.
+7. Ask Gemini to determine the hypothesis from the evidence rather than hard-coding the expected root cause.
+8. Validate the returned structured JSON.
+9. Validate that confidence is between 0.0 and 1.0.
+10. Validate that every referenced evidence ID actually exists.
+11. Validate the evidence chain.
+12. Separate observations from hypotheses.
+13. Preserve missing/uncertain evidence where applicable.
+14. Reject invented evidence IDs.
+15. Never execute remediation.
+
+PERSISTENCE
+
+Persist the validated RCA result in the existing database using the project's existing database patterns.
+
+Do not introduce a second database system.
+
+Add:
+
+GET /incidents/{incident_id}/root-cause-analysis
+
+The GET endpoint must:
+
+* Return the persisted RCA.
+* NOT call Gemini.
+* NOT perform a new RAG generation.
+* Return an appropriate 404 only when no RCA exists.
+* Never expose the API key.
+
+AI CALL LIMIT
+
+Maintain the existing limit of one Gemini generation call per RCA analysis request.
+
+Do not implement retries.
+
+TESTING
+
+Add deterministic mocked tests for:
+
+* valid structured Gemini response
+* invalid JSON
+* confidence outside 0.0–1.0
+* nonexistent evidence ID
+* missing required fields
+* persistence
+* GET retrieval
+* GET does not call Gemini
+* one-call enforcement
+* Gemini failure handling
+
+Then run the complete automated test suite.
+
+LIVE VERIFICATION
+
+Only after the implementation fix and tests are complete, perform ONE real end-to-end Gemini RCA request against seeded incident ID 1.
+
+That single live request must follow:
+
+Phase 4 evidence
+↓
+Phase 5 RAG
+↓
+Evidence package
+↓
+ONE Gemini generation
+↓
+Structured validation
+↓
+Persistence
+
+Do not perform another connectivity-only GEMINI_OK test.
+
+Do not retry if the live RCA request fails.
+
+After the live test, verify:
+
+GET /incidents/1/root-cause-analysis
+
+The GET request must retrieve the stored result without making another Gemini call.
+
+REPORT ONLY:
+
+1. Root cause of the previous 502.
+2. Files/components changed.
+3. Automated test count and result.
+4. Live Gemini RCA result.
+5. Number of RAG chunks retrieved.
+6. Gemini calls made.
+7. Structured validation result.
+8. Persistence result.
+9. GET retrieval result.
+10. Whether GET triggered Gemini.
+11. Any remaining limitations.
+
+STOP after reporting.
+
+Do not implement Phase 7.

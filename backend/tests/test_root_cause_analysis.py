@@ -12,10 +12,12 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from backend.app.db.base import Base
+from backend.app.db.models import RootCauseAnalysisRecord
 from backend.app.db.seed import seed_demo_data
 from backend.app.db.session import get_db
 from backend.app.main import app
 from backend.app.services import root_cause_analysis as analysis_service
+from backend.app.services.root_cause_analysis import AnalysisConfig
 
 
 RAG_TEXT = "The checkout pool runbook recommends checking pool size and waiters."
@@ -182,6 +184,18 @@ def analyze(client: TestClient, incident_id: int = 1) -> httpx.Response:
     return client.post("/incidents/analyze", json={"incident_id": incident_id})
 
 
+def analyze_persisted(client: TestClient, incident_id: int = 1) -> httpx.Response:
+    return client.post(f"/incidents/{incident_id}/root-cause-analysis")
+
+
+def test_analysis_model_default_matches_configured_replit_model(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("GEMINI_MODEL", raising=False)
+
+    assert AnalysisConfig.from_env().model == "gemini-3.8-flash"
+
+
 def test_missing_api_key_fails_safely_without_calling_gemini(
     api: TestClient,
     monkeypatch: pytest.MonkeyPatch,
@@ -238,12 +252,20 @@ def test_analysis_uses_deterministic_evidence_and_phase5_rag(
     assert RAG_TEXT in prompt
     assert "E1" in prompt
     assert calls[0]["headers"]["x-goog-api-key"] == "mock-only-not-a-real-key"  # type: ignore[index]
+    assert calls[0]["url"] == (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        "gemini-test-model:generateContent"
+    )
+    generation_config = calls[0]["json"]["generationConfig"]  # type: ignore[index]
+    assert generation_config["responseMimeType"] == "application/json"
+    assert len(calls) == 1
 
 
 @pytest.mark.parametrize(
     ("output", "message"),
     [
         ("not JSON", "failed response validation"),
+        ({"summary": "Required response fields are missing."}, "failed response validation"),
         (
             {
                 **MODEL_OUTPUT,
@@ -291,6 +313,42 @@ def test_identical_evidence_uses_cache_without_a_second_gemini_call(
     assert second.json()["ai_call_count"] == 0
     assert second.json()["cached"] is True
     assert second.json()["evidence"] == first.json()["evidence"]
+
+
+def test_persisted_analysis_get_and_duplicate_post_do_not_call_gemini_again(
+    api: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = mock_gemini_response(monkeypatch)
+
+    created = analyze_persisted(api)
+
+    assert created.status_code == 200, created.text
+    assert created.json()["ai_call_count"] == 1
+    assert len(calls) == 1
+    stored = api.get("/incidents/1/root-cause-analysis")
+    assert stored.status_code == 200
+    assert stored.json() == created.json()
+    assert len(calls) == 1
+
+    repeated = analyze_persisted(api)
+    assert repeated.status_code == 200
+    assert repeated.json()["cached"] is True
+    assert repeated.json()["ai_call_count"] == 0
+    assert len(calls) == 1
+
+
+def test_get_analysis_without_saved_record_returns_404_without_gemini(
+    api: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = mock_gemini_response(monkeypatch)
+
+    response = api.get("/incidents/1/root-cause-analysis")
+
+    assert response.status_code == 404
+    assert response.json()["detail"]["code"] == "root_cause_analysis_not_found"
+    assert calls == []
 
 
 def test_empty_rag_results_are_reported_as_uncertainty(
@@ -371,10 +429,13 @@ def test_non_simulation_report_is_rejected(
 def test_gemini_upstream_failure_is_sanitized(
     api: TestClient,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     sentinel = "private-upstream-error-detail"
+    calls: list[str] = []
 
     def failed_post(url: str, **_kwargs: object) -> httpx.Response:
+        calls.append(url)
         return httpx.Response(
             500,
             text=sentinel,
@@ -388,6 +449,12 @@ def test_gemini_upstream_failure_is_sanitized(
     assert response.status_code == 502
     assert sentinel not in response.text
     assert "mock-only-not-a-real-key" not in response.text
+    assert len(calls) == 1
+    record = next(
+        item for item in caplog.records
+        if item.message == "gemini_analysis_request_failed"
+    )
+    assert record.upstream_status == 500
 
 
 def test_invalid_incident_id_returns_not_found(
