@@ -1,2 +1,3 @@
 - [Vite preview compatibility](vite-preview-compatibility.md) — Vite 5.4's typings do not accept `server.allowedHosts`; bind the dev server to `0.0.0.0` for Replit preview access.
 - [SQLite configuration boundary](sqlite-configuration-boundary.md) — use the app-specific database URL variable so the SQLite MVP cannot accidentally target a platform PostgreSQL URL.
+- [Google GenAI/Pydantic compatibility](google-genai-pydantic-compatibility.md) — preserve the Pydantic 2.9.2 pin unless explicitly approved; newer GenAI SDK releases may require an upgrade.
