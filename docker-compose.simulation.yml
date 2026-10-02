@@ -1,0 +1,113 @@
+services:
+  database-simulation:
+    build:
+      context: .
+      dockerfile: docker/simulation.Dockerfile
+    command: ["uvicorn", "simulation.database:app", "--host", "0.0.0.0", "--port", "8092"]
+    environment:
+      SIMULATION_ONLY: "true"
+      DB_POOL_SIZE: "50"
+    networks:
+      - incident-simulation
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8092/health', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  order-service:
+    build:
+      context: .
+      dockerfile: docker/simulation.Dockerfile
+    command: ["uvicorn", "simulation.orders:app", "--host", "0.0.0.0", "--port", "8091"]
+    environment:
+      SIMULATION_ONLY: "true"
+    networks:
+      - incident-simulation
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8091/health', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  checkout-service:
+    build:
+      context: .
+      dockerfile: docker/simulation.Dockerfile
+    command: ["uvicorn", "simulation.checkout:app", "--host", "0.0.0.0", "--port", "8090"]
+    environment:
+      SIMULATION_ONLY: "true"
+      SIM_DATABASE_URL: "http://database-simulation:8092"
+      SIM_ORDER_URL: "http://order-service:8091"
+    depends_on:
+      database-simulation:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+    networks:
+      - incident-simulation
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  api-gateway-simulation:
+    build:
+      context: .
+      dockerfile: docker/simulation.Dockerfile
+    command: ["uvicorn", "simulation.gateway:app", "--host", "0.0.0.0", "--port", "8088"]
+    environment:
+      SIMULATION_ONLY: "true"
+      SIM_DATABASE_URL: "http://database-simulation:8092"
+      SIM_CHECKOUT_URL: "http://checkout-service:8090"
+      SIM_ORDER_URL: "http://order-service:8091"
+    depends_on:
+      database-simulation:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+      checkout-service:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8088:8088"
+    networks:
+      - incident-simulation
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8088/health', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+networks:
+  incident-simulation:
+    name: incident-commander-simulation
+    internal: true

@@ -2,7 +2,7 @@
 
 Hackathon-quality foundation for an enterprise SRE/DevOps incident investigation system.
 
-## Phase 3: Deterministic incident engine
+## Current implementation
 
 This phase contains:
 
@@ -18,7 +18,7 @@ This phase contains:
 - Log, deployment, metric, and evidence ingestion linked to incidents and services
 - Docker configuration for local portability
 
-AI orchestration, specialist agents, RAG, incident workflows, and remediation execution are intentionally not implemented yet.
+The project also includes a separate Phase 4 synthetic e-commerce simulation, described below. AI orchestration, specialist agents, RAG, incident investigation automation, and production remediation are intentionally not implemented.
 
 ## Run on Replit
 
@@ -65,3 +65,15 @@ docker compose up --build
 ```
 
 Docker is provided as a portability option. Replit workflows run directly in the workspace environment.
+
+## Phase 4: isolated e-commerce simulation
+
+Run the synthetic Checkout, Order, API Gateway, and database-pool simulator with:
+
+```bash
+docker compose -f docker-compose.simulation.yml up --build
+```
+
+The simulator gateway is bound to `127.0.0.1:8088` only. See
+`docs/phase-4-simulation.md` for the HEALTHY → FAILURE → rollback flow. The simulation
+network is internal and has no production connectivity.

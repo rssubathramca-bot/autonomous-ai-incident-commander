@@ -7,8 +7,8 @@
 
 The frontend calls `/api/health`. Vite proxies that path to the FastAPI `/health` endpoint.
 
-## Phase 1 status
+## Current phase
 
-Phase 3 is complete: SQLAlchemy SQLite models, Pydantic schemas, seeded Checkout Service data, deterministic incident lifecycle operations, severity thresholds, related-record ingestion, and timeline tracking.
+Phase 4 includes an isolated synthetic e-commerce environment in `docker-compose.simulation.yml`. The simulator is intentionally separate from the frontend/API workflows and has no production connectivity.
 
-AI, agents, RAG, incident investigation, remediation, recovery, and automated postmortem generation remain intentionally deferred until the next requested phase.
+AI, agents, RAG, incident investigation, production remediation, recovery, and automated postmortem generation remain intentionally deferred until the next requested phase.
