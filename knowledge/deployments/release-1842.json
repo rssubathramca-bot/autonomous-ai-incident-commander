@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "document_id": "DEPLOY-CHECKOUT-1842",
+    "document_type": "deployment",
+    "title": "Synthetic Checkout Service Deployment — Release #1842",
+    "service": "checkout-service",
+    "source": "knowledge/deployments/release-1842.json",
+    "version": "checkout-sim-1.8.42",
+    "created_at": "2026-07-14T14:30:00Z",
+    "tags": ["deployment", "release-1842", "checkout", "db-pool"],
+    "synthetic": true
+  },
+  "content": "# Synthetic deployment record: Release #1842\n\n**Deployment identifier:** DEPLOY-CHECKOUT-1842  \n**Service:** Checkout Service (`checkout-service`)  \n**Version:** `checkout-sim-1.8.42`  \n**Deployment timestamp:** 2026-07-14T14:30:00Z  \n**Status:** completed in the isolated simulation  \n**Record type:** synthetic; not a real release\n\n## Configuration change recorded\n\n```text\nDB_POOL_SIZE: 50 -> 10\n```\n\nThe synthetic release record represents a pool-size reduction for the checkout demo. It does not configure an actual database or service. The corresponding simulated healthy baseline uses `DB_POOL_SIZE=50`; the failure scenario uses `DB_POOL_SIZE=10`.\n\n## Investigation context\n\nWhen comparing this record with an incident, align its timestamp with checkout request volume, database pool waiters, connection acquisition timeouts, checkout error rate, and p95 latency. A deployment record is one evidence source. It does not by itself prove causation or authorize a rollback. Any rollback described in this knowledge base is restricted to the guarded simulation controls."
+}

@@ -1,0 +1,1 @@
+"""Local knowledge ingestion and vector retrieval."""

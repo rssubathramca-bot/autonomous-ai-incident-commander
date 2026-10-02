@@ -1,4 +1,11 @@
 import { useEffect, useState } from "react";
+import KnowledgeExplorer from "./KnowledgeExplorer";
+
+type AppView = "overview" | "knowledge";
+const initialView: AppView =
+  new URLSearchParams(window.location.search).get("view") === "knowledge"
+    ? "knowledge"
+    : "overview";
 
 type HealthResponse = {
   status: string;
@@ -12,6 +19,7 @@ type ConnectionState =
   | { status: "offline"; message: string };
 
 function App() {
+  const [view, setView] = useState<AppView>(initialView);
   const [connection, setConnection] = useState<ConnectionState>({
     status: "checking",
   });
@@ -39,7 +47,7 @@ function App() {
           <div>
             <div className="mb-4 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.24em] text-signal">
               <span className="h-2 w-2 rounded-full bg-signal shadow-[0_0_12px_rgba(65,214,167,0.9)]" />
-              Incident Engine / Phase 3
+              Incident Commander / Phase 5
             </div>
             <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
               Incident Commander
@@ -55,68 +63,106 @@ function App() {
           </div>
         </header>
 
-        <section className="grid gap-5 py-8 md:grid-cols-3">
-          <article className="rounded-xl border border-slate-800 bg-panel p-5 md:col-span-2">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-slate-400">System readiness</p>
-                <h2 className="mt-2 text-2xl font-semibold text-white">
-                  API connectivity
-                </h2>
-              </div>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  connection.status === "checking"
-                    ? "bg-amber-400/10 text-amber-300"
-                    : isOnline
-                      ? "bg-signal/10 text-signal"
-                      : "bg-rose-400/10 text-rose-300"
-                }`}
-              >
-                {connection.status === "checking"
-                  ? "Checking"
-                  : isOnline
-                    ? "Online"
-                    : "Offline"}
-              </span>
-            </div>
-            <div className="mt-8 grid gap-4 border-t border-slate-800 pt-5 sm:grid-cols-3">
-              <StatusMetric
-                label="Service"
-                value={isOnline ? connection.data.service : "Incident API"}
-              />
-              <StatusMetric
-                label="Environment"
-                value={isOnline ? connection.data.phase : "Foundation"}
-              />
-              <StatusMetric
-                label="Endpoint"
-                value="/api/health"
-              />
-            </div>
-            {connection.status === "offline" && (
-              <p className="mt-5 text-sm text-rose-300">
-                Unable to reach the API: {connection.message}
-              </p>
-            )}
-          </article>
+        <nav
+          aria-label="Main navigation"
+          className="mt-6 flex gap-2 border-b border-slate-800"
+        >
+          <ViewButton active={view === "overview"} onClick={() => setView("overview")}>
+            Overview
+          </ViewButton>
+          <ViewButton active={view === "knowledge"} onClick={() => setView("knowledge")}>
+            Knowledge retrieval
+          </ViewButton>
+        </nav>
 
-          <article className="rounded-xl border border-slate-800 bg-panel p-5">
-            <p className="text-sm font-medium text-slate-400">Next layers</p>
-            <ul className="mt-4 space-y-3 text-sm text-slate-300">
-              <RoadmapItem label="Incident data model" />
-              <RoadmapItem label="Evidence collection" />
-              <RoadmapItem label="AI orchestration" muted />
-              <RoadmapItem label="Safe remediation" muted />
-            </ul>
-          </article>
-        </section>
+        {view === "knowledge" ? (
+          <KnowledgeExplorer />
+        ) : (
+          <section className="grid gap-5 py-8 md:grid-cols-3">
+            <article className="rounded-xl border border-slate-800 bg-panel p-5 md:col-span-2">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-slate-400">System readiness</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-white">
+                    API connectivity
+                  </h2>
+                </div>
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    connection.status === "checking"
+                      ? "bg-amber-400/10 text-amber-300"
+                      : isOnline
+                        ? "bg-signal/10 text-signal"
+                        : "bg-rose-400/10 text-rose-300"
+                  }`}
+                >
+                  {connection.status === "checking"
+                    ? "Checking"
+                    : isOnline
+                      ? "Online"
+                      : "Offline"}
+                </span>
+              </div>
+              <div className="mt-8 grid gap-4 border-t border-slate-800 pt-5 sm:grid-cols-3">
+                <StatusMetric
+                  label="Service"
+                  value={isOnline ? connection.data.service : "Incident API"}
+                />
+                <StatusMetric
+                  label="Environment"
+                  value={isOnline ? connection.data.phase : "Foundation"}
+                />
+                <StatusMetric label="Endpoint" value="/api/health" />
+              </div>
+              {connection.status === "offline" && (
+                <p className="mt-5 text-sm text-rose-300">
+                  Unable to reach the API: {connection.message}
+                </p>
+              )}
+            </article>
+
+            <article className="rounded-xl border border-slate-800 bg-panel p-5">
+              <p className="text-sm font-medium text-slate-400">Current layers</p>
+              <ul className="mt-4 space-y-3 text-sm text-slate-300">
+                <RoadmapItem label="Incident lifecycle" />
+                <RoadmapItem label="Evidence tracking" />
+                <RoadmapItem label="Local knowledge retrieval" />
+                <RoadmapItem label="AI reasoning (later phase)" muted />
+              </ul>
+            </article>
+          </section>
+        )}
 
         <footer className="border-t border-slate-800 pt-5 text-sm text-slate-500">
-          Phase 3 adds deterministic incident lifecycle and evidence tracking; AI, agents, RAG, and remediation remain deferred.
+          Phase 5 provides local top‑K knowledge retrieval. It does not perform root-cause reasoning or execute remediation.
         </footer>
       </div>
     </main>
+  );
+}
+
+function ViewButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-current={active ? "page" : undefined}
+      className={`border-b-2 px-3 py-3 text-sm font-medium transition ${
+        active
+          ? "border-signal text-signal"
+          : "border-transparent text-slate-500 hover:text-slate-200"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 

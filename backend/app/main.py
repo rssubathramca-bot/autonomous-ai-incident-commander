@@ -1,17 +1,31 @@
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from .api.knowledge import router as knowledge_router
 from .api.incidents import router as incidents_router
-from .db.session import get_db
+from .db.session import get_db, init_db
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    # Create new MVP tables on startup without altering existing SQLite tables.
+    init_db()
+    yield
 
 
 app = FastAPI(
     title="Incident Commander API",
     version="0.1.0",
-    description="Deterministic Phase 3 incident engine API for the Autonomous AI-Powered Incident Commander.",
+    description=(
+        "Deterministic incident engine and local knowledge retrieval API for the "
+        "Autonomous AI-Powered Incident Commander."
+    ),
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -22,6 +36,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(incidents_router)
+app.include_router(knowledge_router)
 
 
 @app.get("/health", tags=["system"])

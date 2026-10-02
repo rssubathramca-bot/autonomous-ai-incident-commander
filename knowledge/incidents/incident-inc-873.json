@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "document_id": "INC-873",
+    "document_type": "historical_incident",
+    "title": "Historical Synthetic Incident INC-873 — Checkout Pool Contention",
+    "service": "checkout-service",
+    "source": "knowledge/incidents/incident-inc-873.json",
+    "version": "1.0",
+    "created_at": "2026-07-15T11:00:00Z",
+    "tags": ["historical-incident", "INC-873", "checkout", "connection-pool"],
+    "synthetic": true
+  },
+  "content": "# Historical synthetic incident INC-873\n\n**Affected service:** Checkout Service (`checkout-service`)  \n**Environment:** isolated e-commerce simulation  \n**Incident window:** 2026-07-14 14:35–15:02 UTC  \n**Record type:** synthetic historical example; not a real customer incident\n\n## Timeline and observations\n\n- 14:30 UTC: synthetic Release #1842 completed and recorded `DB_POOL_SIZE` changing from 50 to 10.\n- 14:35 UTC: request volume increased in the demo load generator. Checkout latency and connection waiters began rising.\n- 14:39 UTC: synthetic logs included `database connection acquisition timeout` and `connection pool exhausted`.\n- 14:44 UTC: the observed checkout error rate reached 28% and p95 latency reached 1,760 ms in the example incident dataset. These values are illustrative, not measured production data.\n- 15:02 UTC: the operator used the simulation-only rollback to restore the prior pool setting. The subsequent comparable traffic run returned to the healthy demo state.\n\n## Investigation evidence\n\nThe investigation compared the release record, pool-size value, database wait and timeout messages, request volume, checkout error-rate samples, and p95-latency samples. Their timing was consistent with pool contention after the configuration change. That historical correlation was supporting evidence for this synthetic incident, not a universal diagnosis rule.\n\n## Resolution and lessons\n\nThe simulation rollback restored `DB_POOL_SIZE=50`; no production system was changed. Preserve synchronized logs, metrics, and deployment records when investigating a similar symptom. Verify current traffic and replica load, confirm the environment, and evaluate the result of a guarded simulator-only rollback. INC-873 is one retrievable reference and must not be treated as the predetermined answer to a future incident."
+}

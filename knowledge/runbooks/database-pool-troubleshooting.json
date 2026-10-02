@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "document_id": "TROUBLESHOOT-DB-POOL-001",
+    "document_type": "troubleshooting",
+    "title": "Database Connection Pool Troubleshooting",
+    "service": "checkout-service",
+    "source": "knowledge/runbooks/database-pool-troubleshooting.json",
+    "version": "1.0",
+    "created_at": "2026-06-11T09:00:00Z",
+    "tags": ["database", "pool", "connections", "latency", "checkout"],
+    "synthetic": true
+  },
+  "content": "# Database connection pool troubleshooting\n\nA connection pool limits how many database sessions a service can use concurrently. `DB_POOL_SIZE` is the configured maximum number of simulated active connections. A request acquires a slot, performs its database operation, and releases the slot. Requests arriving while every slot is busy wait for an available connection.\n\n## Pool exhaustion and timeouts\nPool exhaustion occurs when active work reaches the configured pool limit and new requests cannot acquire a connection before the acquisition timeout. The synthetic Checkout Service can then return a database timeout instead of completing checkout. Retry or backoff behavior adds time to the failed request, so p95 latency can rise along with the error rate. Increasing traffic or replicas can increase concurrent demand; it does not by itself establish that pool size is the cause.\n\n## Diagnostic measurements\nCompare `DB_POOL_SIZE`, active connections, waiting checkout requests, database acquisition-timeout count, checkout request volume, `checkout_error_rate`, and `checkout_p95_latency`. Align timestamps across metrics, application logs, and deployment events. Look for whether waiters and timeouts begin after traffic changes or a pool-configuration change, and check whether the pool returns to normal after a controlled simulation rollback.\n\nThe synthetic simulator uses a fixed query duration and a bounded acquisition wait to make contention observable. Its values are demo behavior, not recommendations for a real database. Do not apply simulator settings to an external database or infer safe production pool values from this small exercise."
+}

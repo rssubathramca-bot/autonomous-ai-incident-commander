@@ -189,6 +189,71 @@ class KnowledgeDocument(TimestampMixin, Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
 
     evidence: Mapped[list[Evidence]] = relationship(back_populates="knowledge_document")
+    knowledge_metadata: Mapped[KnowledgeDocumentMetadata | None] = relationship(
+        back_populates="document",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    chunks: Mapped[list[KnowledgeChunk]] = relationship(
+        back_populates="document",
+        cascade="all, delete-orphan",
+        order_by="KnowledgeChunk.chunk_index",
+    )
+
+
+class KnowledgeDocumentMetadata(TimestampMixin, Base):
+    __tablename__ = "knowledge_document_metadata"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    knowledge_document_id: Mapped[int] = mapped_column(
+        ForeignKey("knowledge_documents.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    document_id: Mapped[str] = mapped_column(String(120), nullable=False, unique=True)
+    service: Mapped[str] = mapped_column(String(120), nullable=False)
+    version: Mapped[str] = mapped_column(String(80), nullable=False)
+    document_created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
+    tags: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    synthetic: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    document: Mapped[KnowledgeDocument] = relationship(
+        back_populates="knowledge_metadata",
+    )
+
+
+class KnowledgeChunk(TimestampMixin, Base):
+    __tablename__ = "knowledge_chunks"
+    __table_args__ = (
+        UniqueConstraint(
+            "knowledge_document_id",
+            "chunk_index",
+            name="uq_knowledge_chunk_document_index",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    knowledge_document_id: Mapped[int] = mapped_column(
+        ForeignKey("knowledge_documents.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    chunk_id: Mapped[str] = mapped_column(String(180), nullable=False, unique=True)
+    chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(JSON, nullable=False)
+    embedding_model: Mapped[str] = mapped_column(String(120), nullable=False)
+    chunk_metadata: Mapped[dict[str, Any]] = mapped_column(
+        "metadata",
+        JSON,
+        nullable=False,
+    )
+
+    document: Mapped[KnowledgeDocument] = relationship(back_populates="chunks")
 
 
 class Evidence(TimestampMixin, Base):

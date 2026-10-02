@@ -1,0 +1,748 @@
+# PHASE 5 — RAG + KNOWLEDGE LAYER
+
+You are continuing the existing project:
+
+**Autonomous AI-Powered Incident Commander for Enterprise SRE & DevOps**
+
+## CURRENT PROJECT STATUS
+
+Phases 1–4 are already implemented.
+
+Phase 4 contains an isolated e-commerce incident simulation with:
+
+* API Gateway simulation
+* Checkout Service
+* Order Service
+* In-memory database-pool simulator
+* `DB_POOL_SIZE=50` healthy state
+* Failure injection changing `DB_POOL_SIZE` from `50` to `10`
+* Synthetic database connection timeouts
+* Increased checkout errors
+* Increased latency
+* Rollback restoring `DB_POOL_SIZE=50`
+* Synthetic logs
+* Synthetic metrics
+* Synthetic deployment events
+* Simulation-only acknowledgement for mutating operations
+* Internal Docker network
+* Gateway exposed only on `127.0.0.1:8088`
+
+Phase 4 was verified successfully through native execution because the Replit workspace does not provide a Docker daemon.
+
+**DO NOT rewrite or break Phase 4.**
+
+Do not spend time trying to enable Docker in Replit.
+
+---
+
+# OBJECTIVE OF PHASE 5
+
+Build the **RAG + Knowledge Layer**.
+
+The purpose of this phase is to give the Incident Commander access to approved operational knowledge that can later be used by the AI reasoning layer.
+
+The Phase 5 pipeline must be:
+
+```text
+Knowledge Documents
+        ↓
+Document Loading
+        ↓
+Document Chunking
+        ↓
+Embeddings
+        ↓
+Vector Index
+        ↓
+Similarity Search
+        ↓
+Top-K Relevant Evidence
+```
+
+Phase 5 must **NOT** perform root-cause reasoning.
+
+Phase 5 must **NOT** make remediation decisions.
+
+Phase 5 must **NOT** automatically execute actions.
+
+---
+
+# IMPORTANT AI LIMIT
+
+Keep AI usage deliberately limited.
+
+Use normal deterministic Python for:
+
+* document loading
+* document validation
+* metadata extraction
+* document chunking
+* database storage
+* vector-index management
+* similarity search
+* API endpoints
+* validation
+* testing
+
+Use embeddings only for semantic retrieval.
+
+Do NOT call an LLM to determine the root cause.
+
+Do NOT call an LLM to generate remediation.
+
+Do NOT create an autonomous agent in this phase.
+
+Do NOT use an LLM simply to summarize documents.
+
+The actual reasoning LLM will be introduced in **Phase 6**.
+
+---
+
+# TECHNOLOGY CONSTRAINTS
+
+Use the existing project technology stack.
+
+Preferred technologies:
+
+* Python
+* FastAPI
+* SQLite initially
+* PostgreSQL-compatible database design
+* RAG
+* Vector search
+* Embeddings
+* Docker-compatible architecture
+
+Do NOT introduce:
+
+* LangChain
+* LangGraph
+* unnecessary agent frameworks
+* unnecessary databases
+* unnecessary infrastructure
+* external production systems
+
+Keep the vector/embedding implementation behind an abstraction so the embedding provider can be replaced later.
+
+---
+
+# KNOWLEDGE BASE
+
+Create a synthetic knowledge base specifically for the simulated e-commerce environment.
+
+Directory structure should be similar to:
+
+```text
+knowledge/
+├── runbooks/
+├── architecture/
+├── known_errors/
+├── deployments/
+└── incidents/
+```
+
+Create realistic but clearly synthetic documents.
+
+Do NOT use real company production information.
+
+Do NOT include:
+
+* real credentials
+* API keys
+* passwords
+* production database information
+* real customer information
+* real payment information
+* real infrastructure access
+
+---
+
+# REQUIRED SYNTHETIC DOCUMENTS
+
+At minimum create these six documents.
+
+## 1. Checkout Database Timeout Runbook
+
+Create a runbook explaining how an operator should investigate database connection timeouts affecting the Checkout Service.
+
+Include information such as:
+
+* symptoms
+* affected service
+* relevant metrics
+* relevant logs
+* database connection pool
+* timeout indicators
+* deployment correlation
+* safe diagnostic steps
+* rollback considerations
+
+Keep it synthetic.
+
+---
+
+## 2. Database Connection Pool Troubleshooting
+
+Create a technical troubleshooting document explaining:
+
+* connection pool size
+* connection acquisition
+* connection timeouts
+* pool exhaustion
+* checkout impact
+* latency impact
+* error-rate impact
+* diagnostic metrics
+
+Make the document useful for semantic retrieval.
+
+---
+
+## 3. E-Commerce Architecture
+
+Create an architecture document describing:
+
+```text
+API Gateway
+     ↓
+Checkout Service
+     ↓
+Order Service
+     ↓
+Database Pool Simulator
+```
+
+Explain the relationships between the simulated services.
+
+Include relevant service names and responsibilities.
+
+---
+
+## 4. Known Database Timeout Errors
+
+Create a known-error document describing synthetic database timeout errors.
+
+Include example synthetic error messages such as:
+
+```text
+database connection acquisition timeout
+connection pool exhausted
+checkout database request timed out
+```
+
+Explain possible diagnostic evidence without declaring a root cause.
+
+---
+
+## 5. Deployment Record — Release #1842
+
+Create a synthetic deployment record for:
+
+```text
+Release: #1842
+Service: Checkout Service
+```
+
+Include:
+
+* deployment identifier
+* service
+* version
+* deployment timestamp
+* configuration changes
+* relevant database-pool configuration
+* deployment status
+
+Make it realistic but explicitly synthetic.
+
+---
+
+## 6. Historical Incident — INC-873
+
+Create a synthetic historical incident:
+
+```text
+INC-873
+```
+
+It should describe a previous simulated database connection-pool problem.
+
+Include:
+
+* incident timeline
+* affected service
+* observed symptoms
+* logs
+* metrics
+* deployment information
+* investigation evidence
+* resolution
+* lessons learned
+
+This incident should be similar enough that semantic search can retrieve it when querying about database connection timeouts.
+
+Do NOT hard-code INC-873 as the answer to future incidents.
+
+It must only be one piece of retrievable evidence.
+
+---
+
+# DOCUMENT METADATA
+
+Every document must contain metadata including:
+
+```text
+document_id
+document_type
+title
+service
+source
+version
+created_at
+tags
+```
+
+Example:
+
+```json
+{
+  "document_id": "RUNBOOK-CHECKOUT-DB-001",
+  "document_type": "runbook",
+  "title": "Checkout Database Timeout Runbook",
+  "service": "checkout-service",
+  "source": "synthetic-runbook",
+  "version": "1.0",
+  "created_at": "2026-01-15T10:00:00Z",
+  "tags": [
+    "checkout",
+    "database",
+    "timeout",
+    "connection-pool"
+  ]
+}
+```
+
+Use synthetic dates and synthetic identifiers.
+
+---
+
+# DATABASE DESIGN
+
+Add knowledge-related database models/tables if required.
+
+At minimum support:
+
+```text
+KnowledgeDocument
+KnowledgeChunk
+```
+
+Store metadata safely.
+
+The design must be compatible with PostgreSQL later.
+
+Do not unnecessarily duplicate existing project models.
+
+---
+
+# DOCUMENT CHUNKING
+
+Implement deterministic document chunking.
+
+The chunking system must preserve metadata for every chunk.
+
+Each chunk should contain:
+
+```text
+document_id
+chunk_id
+document_title
+document_type
+service
+source
+text
+```
+
+Do not randomly split documents.
+
+Do not discard important information.
+
+Make chunk size configurable.
+
+Use deterministic overlap if overlap is needed.
+
+The same document must produce the same chunks when indexed again.
+
+---
+
+# EMBEDDING LAYER
+
+Implement an embedding abstraction.
+
+For example, conceptually:
+
+```text
+EmbeddingProvider
+        │
+        ├── embed_document()
+        └── embed_query()
+```
+
+The exact provider should follow the existing project architecture.
+
+Do not tightly couple the whole application to one embedding vendor.
+
+If an external embedding API is required, isolate it behind the provider interface.
+
+Do not expose API keys in source code.
+
+Use environment variables for credentials.
+
+---
+
+# VECTOR SEARCH
+
+Implement actual semantic vector retrieval.
+
+The system must:
+
+1. Load documents.
+2. Chunk documents.
+3. Generate embeddings.
+4. Store/index the vectors.
+5. Accept a search query.
+6. Generate the query embedding.
+7. Calculate similarity against indexed chunks.
+8. Sort results by similarity.
+9. Return the top-K results.
+
+Do NOT simply search for hard-coded keywords.
+
+Do NOT hard-code:
+
+```text
+database timeout → INC-873
+```
+
+The result must come from the actual retrieval process.
+
+---
+
+# SEARCH API
+
+Add:
+
+```text
+POST /knowledge/index
+```
+
+Purpose:
+
+Index the knowledge documents.
+
+---
+
+Add:
+
+```text
+POST /knowledge/search
+```
+
+Request should accept something similar to:
+
+```json
+{
+  "query": "Checkout service is experiencing database connection timeouts after a deployment",
+  "top_k": 5
+}
+```
+
+Response should contain:
+
+```text
+query
+results
+```
+
+Each result should include:
+
+```text
+chunk_id
+document_id
+title
+document_type
+service
+source
+similarity_score
+text
+metadata
+```
+
+---
+
+Add:
+
+```text
+GET /knowledge/documents
+```
+
+Return the available knowledge documents and their metadata.
+
+---
+
+Add:
+
+```text
+GET /knowledge/documents/{document_id}
+```
+
+Return the requested document and its chunks.
+
+Handle unknown document IDs safely.
+
+---
+
+# SEARCH TEST SCENARIO
+
+Test this query:
+
+```text
+Checkout service is experiencing database connection timeouts after a deployment.
+```
+
+The retrieval system should return relevant evidence such as:
+
+* Checkout database timeout runbook
+* Database connection pool troubleshooting
+* Deployment #1842
+* Historical incident INC-873
+* relevant architecture information
+
+The exact ranking may vary depending on the embedding implementation.
+
+Do not force a particular ranking.
+
+The important requirement is that relevant evidence is retrieved through actual semantic search.
+
+---
+
+# ADDITIONAL SEARCH TESTS
+
+Test at least:
+
+### Test 1
+
+Query:
+
+```text
+Why are checkout requests timing out while waiting for database connections?
+```
+
+Expected:
+
+Database/checkout-related knowledge should appear.
+
+### Test 2
+
+Query:
+
+```text
+What changed during release 1842?
+```
+
+Expected:
+
+Deployment #1842 should be retrieved.
+
+### Test 3
+
+Query:
+
+```text
+Find previous incidents involving database connection pool exhaustion.
+```
+
+Expected:
+
+INC-873 should be retrieved if its content is semantically relevant.
+
+### Test 4
+
+Query:
+
+```text
+How does the checkout service communicate with the order service?
+```
+
+Expected:
+
+Architecture information should be retrieved.
+
+---
+
+# SAFETY REQUIREMENTS
+
+The Phase 5 knowledge layer must remain completely isolated from production.
+
+It must:
+
+* use synthetic documents only
+* use simulated incident data
+* make no production connections
+* make no real database connections
+* make no payment-provider calls
+* make no order-platform calls
+* perform no destructive operations
+* perform no automatic remediation
+* execute no shell commands from retrieved documents
+* treat retrieved documents as data, not instructions to execute
+
+Retrieved text must never be executed as code.
+
+---
+
+# TESTING
+
+Create automated tests covering:
+
+1. Knowledge documents load successfully.
+2. Metadata is valid.
+3. Documents are chunked.
+4. Chunk metadata is preserved.
+5. Embeddings are generated successfully.
+6. Vector indexing works.
+7. Semantic search works.
+8. Database-timeout queries retrieve relevant knowledge.
+9. Checkout queries retrieve checkout-related knowledge.
+10. Deployment queries retrieve release #1842.
+11. Historical-incident queries can retrieve INC-873.
+12. Architecture queries retrieve architecture information.
+13. Similarity scores are returned.
+14. Top-K works.
+15. Empty queries are handled safely.
+16. Invalid `top_k` values are handled safely.
+17. Unknown document IDs are handled safely.
+18. No production/external infrastructure is contacted.
+19. No automatic remediation occurs.
+20. Phase 4 functionality remains intact.
+
+---
+
+# PHASE 4 REGRESSION TEST
+
+Do not break the existing Phase 4 simulation.
+
+After implementing Phase 5, verify that the existing simulation still works.
+
+At minimum confirm:
+
+```text
+Healthy state
+↓
+Failure injection
+↓
+Database timeout simulation
+↓
+Increased errors/latency
+↓
+Rollback
+↓
+Healthy state
+```
+
+Do not redesign Phase 4.
+
+---
+
+# FRONTEND
+
+If the existing project already has a frontend, add only a minimal knowledge/RAG view if it fits the existing architecture.
+
+It should allow an operator to:
+
+* view knowledge documents
+* perform a knowledge search
+* see retrieved chunks
+* see similarity scores
+* see document metadata
+
+Do not build the Phase 6 AI reasoning UI yet.
+
+Do not build autonomous remediation UI yet.
+
+---
+
+# IMPORTANT: DO NOT IMPLEMENT PHASE 6
+
+STOP before implementing:
+
+* Root Cause Agent
+* AI incident reasoning
+* autonomous diagnosis
+* remediation recommendation generation
+* confidence reasoning
+* multi-agent orchestration
+* human approval workflow
+
+Those belong to later phases.
+
+Phase 5 ends at:
+
+```text
+Incident Query
+      ↓
+Knowledge Retrieval
+      ↓
+Top-K Evidence
+```
+
+The output of Phase 5 will become an input to Phase 6.
+
+---
+
+# FINAL VERIFICATION
+
+Before declaring Phase 5 complete:
+
+1. Show the final directory structure.
+2. List all new files.
+3. Show the knowledge documents created.
+4. Explain the chunking implementation.
+5. Explain the embedding abstraction.
+6. Explain the vector-search implementation.
+7. Explain the database schema.
+8. Show the API endpoints.
+9. Run all Phase 5 tests.
+10. Run the Phase 4 regression tests.
+11. Report the exact number of tests passed and failed.
+12. Demonstrate the sample search query.
+13. Show several retrieved evidence results.
+14. Confirm that no root-cause reasoning was implemented.
+15. Confirm that no automatic remediation was implemented.
+16. Confirm that no production infrastructure was contacted.
+
+If something fails, fix it before declaring Phase 5 complete.
+
+Do not claim a test passed unless it was actually executed.
+
+At the end, provide a concise:
+
+```text
+PHASE 5 STATUS
+```
+
+section containing:
+
+* Implementation status
+* Tests passed
+* Tests failed
+* Known limitations
+* Phase 6 prerequisites
+
+Then STOP.
+
+Wait for the instruction:
+
+```text
+NEXT
+```

@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "document_id": "ARCH-ECOMMERCE-001",
+    "document_type": "architecture",
+    "title": "Synthetic E-commerce Service Architecture",
+    "service": "e-commerce-simulation",
+    "source": "knowledge/architecture/e-commerce-simulation.json",
+    "version": "1.0",
+    "created_at": "2026-06-12T09:00:00Z",
+    "tags": ["architecture", "api-gateway", "checkout", "orders", "database"],
+    "synthetic": true
+  },
+  "content": "# Synthetic e-commerce service architecture\n\nThis document describes only the isolated Phase 4 e-commerce simulation. It contains no real customer, payment, or production-system information.\n\n## Request flow\n\n```text\nOperator load generator\n        |\n        v\nAPI Gateway simulation\n        |\n        v\nCheckout Service -------> Database Pool Simulator\n        |\n        +-----------------> Order Service (only after the database step succeeds)\n```\n\nThe API Gateway simulation is the only component exposed on the host, bound to loopback. It provides health, synthetic load, state inspection, failure-injection, rollback, and report endpoints. Its Docker network is internal.\n\nThe Checkout Service receives synthetic checkout requests. It first asks the Database Pool Simulator to acquire a simulated connection and complete an in-memory query. When that step succeeds, it sends an in-memory order request to the Order Service. If database acquisition times out, checkout returns a synthetic error and does not create an order.\n\nThe Order Service allocates synthetic order identifiers in process memory. The Database Pool Simulator is not a database server and stores no business records; it models a configurable connection limit and request contention only. `DB_POOL_SIZE=50` is the healthy demo configuration. The controlled failure scenario changes this setting to `10` and the guarded rollback restores it to `50`.\n\nNo service calls a payment processor, external order platform, or production database."
+}

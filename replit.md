@@ -9,6 +9,6 @@ The frontend calls `/api/health`. Vite proxies that path to the FastAPI `/health
 
 ## Current phase
 
-Phase 4 includes an isolated synthetic e-commerce environment in `docker-compose.simulation.yml`. The simulator is intentionally separate from the frontend/API workflows and has no production connectivity.
+Phase 4 is an isolated synthetic e-commerce environment in `docker-compose.simulation.yml`. Phase 5 adds local embedding-based knowledge retrieval to the API and a Knowledge Retrieval view to the frontend. The simulator remains separate from the frontend/API workflows and has no production connectivity.
 
-AI, agents, RAG, incident investigation, production remediation, recovery, and automated postmortem generation remain intentionally deferred until the next requested phase.
+LLM reasoning, agents, automated incident investigation, production remediation, recovery validation, and automated postmortem generation remain intentionally deferred until a later requested phase.

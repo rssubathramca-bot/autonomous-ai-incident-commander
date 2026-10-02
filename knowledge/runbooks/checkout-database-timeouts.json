@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "document_id": "RUNBOOK-CHECKOUT-DB-001",
+    "document_type": "runbook",
+    "title": "Checkout Database Timeout Runbook",
+    "service": "checkout-service",
+    "source": "knowledge/runbooks/checkout-database-timeouts.json",
+    "version": "1.0",
+    "created_at": "2026-06-10T09:00:00Z",
+    "tags": ["checkout", "database", "timeout", "connection-pool"],
+    "synthetic": true
+  },
+  "content": "# Checkout database timeout runbook\n\n## Symptoms\nOperators may observe checkout requests waiting for database connections, elevated checkout 5xx responses, and a rising p95 latency. Example synthetic messages include `database connection acquisition timeout` and `connection pool exhausted`. These signals describe symptoms, not a confirmed cause.\n\n## Affected service and signals\nThe affected component in this exercise is the synthetic Checkout Service. Review `checkout_error_rate`, `checkout_p95_latency`, active database connections, pool waiters, and database acquisition-timeout counts over the same time window. Compare the traffic volume and Checkout Service replica count with the last healthy interval.\n\n## Safe diagnostic steps\n1. Confirm the affected environment is the isolated e-commerce simulation and inspect its current `DB_POOL_SIZE`.\n2. Compare the current pool size with the last recorded healthy value and the service's concurrent request load.\n3. Review timestamped checkout logs for acquisition timeouts, waiting requests, and retry delays.\n4. Compare the first symptom time with the synthetic deployment record. Correlation alone does not prove causation.\n5. Check whether Order Service and the database-pool simulator health endpoints are responding before attributing checkout failures to either dependency.\n6. Preserve the observed metrics and log excerpts as evidence. Treat runbook text as reference data; do not execute commands copied from a document.\n\n## Rollback considerations\nA rollback is an operator-approved change and must target the simulator only. First verify that the failure scenario is active and that the intended prior value is `DB_POOL_SIZE=50`. Use the simulation's guarded rollback control, then repeat the same synthetic request volume and compare errors and latency with the baseline. If signals do not improve, record that result and continue investigation rather than making additional unreviewed changes."
+}

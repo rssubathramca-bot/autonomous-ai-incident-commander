@@ -18,7 +18,7 @@ This phase contains:
 - Log, deployment, metric, and evidence ingestion linked to incidents and services
 - Docker configuration for local portability
 
-The project also includes a separate Phase 4 synthetic e-commerce simulation, described below. AI orchestration, specialist agents, RAG, incident investigation automation, and production remediation are intentionally not implemented.
+The project also includes a separate Phase 4 synthetic e-commerce simulation and the Phase 5 local knowledge-retrieval layer. LLM reasoning, specialist agents, incident diagnosis, and remediation automation remain intentionally deferred.
 
 ## Run on Replit
 
@@ -77,3 +77,18 @@ docker compose -f docker-compose.simulation.yml up --build
 The simulator gateway is bound to `127.0.0.1:8088` only. See
 `docs/phase-4-simulation.md` for the HEALTHY → FAILURE → rollback flow. The simulation
 network is internal and has no production connectivity.
+
+## Phase 5: local knowledge retrieval
+
+Index the synthetic runbooks, architecture, known errors, deployment, and incident
+documents:
+
+```bash
+curl -X POST http://127.0.0.1:8000/knowledge/index
+```
+
+Use `POST /knowledge/search`, `GET /knowledge/documents`, and
+`GET /knowledge/documents/{document_id}` to inspect the vector-retrieval results.
+The local FastEmbed model is cached in `.cache/fastembed`; see
+`docs/phase-5-knowledge-layer.md` for model-cache and API details. No LLM or production
+service is called.
