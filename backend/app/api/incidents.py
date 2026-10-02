@@ -19,6 +19,11 @@ from backend.app.db.schemas import (
     TimelineEventRead,
 )
 from backend.app.db.session import get_db
+from backend.app.services.root_cause_analysis import (
+    AnalysisRequest,
+    RootCauseAnalysisError,
+    analyze_incident,
+)
 from backend.app.services.incident_engine import (
     EvidenceSourceNotFound,
     IncidentNotFound,
@@ -65,6 +70,28 @@ def _detail_response(incident: object) -> IncidentDetail:
 
 def _raise_not_found(error: Exception) -> None:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
+
+
+@router.post("/analyze")
+def post_incident_analysis(
+    data: AnalysisRequest,
+    db: Session = Depends(get_db),
+) -> dict:
+    try:
+        return analyze_incident(db, data.incident_id)
+    except IncidentNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "incident_not_found",
+                "message": "The requested incident was not found.",
+            },
+        ) from None
+    except RootCauseAnalysisError as error:
+        raise HTTPException(
+            status_code=error.status_code,
+            detail={"code": error.code, "message": error.public_message},
+        ) from None
 
 
 @router.post("", response_model=IncidentDetail, status_code=status.HTTP_201_CREATED)

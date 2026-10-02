@@ -17,8 +17,9 @@ This phase contains:
 - Auditable incident timeline events
 - Log, deployment, metric, and evidence ingestion linked to incidents and services
 - Docker configuration for local portability
+- Evidence-linked Gemini root-cause analysis with response validation and duplicate-call caching
 
-The project also includes a separate Phase 4 synthetic e-commerce simulation and the Phase 5 local knowledge-retrieval layer. LLM reasoning, specialist agents, incident diagnosis, and remediation automation remain intentionally deferred.
+The project also includes a separate Phase 4 synthetic e-commerce simulation and the Phase 5 local knowledge-retrieval layer. Phase 6 adds evidence-grounded Gemini reasoning; remediation automation remains deferred.
 
 ## Run on Replit
 
@@ -42,6 +43,24 @@ database.
 Incident API routes include `POST /incidents`, `GET /incidents/{id}`,
 `GET /incidents/{id}/evidence`, and `GET /incidents/{id}/metrics`. Deterministic status
 updates and record-ingestion routes are also available under `/incidents/{id}`.
+
+Phase 6 adds `POST /incidents/analyze` with `{"incident_id": 1}`. It reads the
+incident's stored logs, metric series, deployment records, and linked evidence, then
+retrieves up to five relevant Phase 5 chunks by default before making one Gemini request.
+When the isolated Phase 4 simulator is running on its configured loopback port, the
+analysis also reads its read-only `/simulation/report`; it accepts that report only
+when `simulation_only` is true. If the simulator is stopped, the analysis reports
+that limitation and uses evidence already stored with the incident.
+Set `GEMINI_API_KEY` through Replit Secrets to enable fresh analyses; without it,
+the endpoint returns a safe configuration error and does not call Gemini. The model
+defaults to `gemini-2.5-flash` and can be changed with `GEMINI_MODEL`.
+
+Input limits and cache behavior can be tuned with the `ROOT_CAUSE_*` values in
+`.env.example`. Identical evidence reuses a bounded, process-local cache for five
+minutes by default. The cache is not shared between processes and is cleared on
+restart. A missing or unindexed knowledge base is reported as an uncertainty; it
+does not cause a fabricated diagnosis. Phase 6 performs analysis only—no commands,
+rollback, production access, or remediation are executed.
 
 ## Run locally
 

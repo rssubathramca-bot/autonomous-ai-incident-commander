@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import KnowledgeExplorer from "./KnowledgeExplorer";
+import RootCauseExplorer from "./RootCauseExplorer";
 
-type AppView = "overview" | "knowledge";
+type AppView = "overview" | "knowledge" | "root-cause";
+const requestedView = new URLSearchParams(window.location.search).get("view");
 const initialView: AppView =
-  new URLSearchParams(window.location.search).get("view") === "knowledge"
-    ? "knowledge"
+  requestedView === "knowledge" || requestedView === "root-cause"
+    ? requestedView
     : "overview";
 
 type HealthResponse = {
@@ -47,7 +49,7 @@ function App() {
           <div>
             <div className="mb-4 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.24em] text-signal">
               <span className="h-2 w-2 rounded-full bg-signal shadow-[0_0_12px_rgba(65,214,167,0.9)]" />
-              Incident Commander / Phase 5
+              Incident Commander / Phase 6
             </div>
             <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
               Incident Commander
@@ -73,9 +75,17 @@ function App() {
           <ViewButton active={view === "knowledge"} onClick={() => setView("knowledge")}>
             Knowledge retrieval
           </ViewButton>
+          <ViewButton
+            active={view === "root-cause"}
+            onClick={() => setView("root-cause")}
+          >
+            Root-cause analysis
+          </ViewButton>
         </nav>
 
-        {view === "knowledge" ? (
+        {view === "root-cause" ? (
+          <RootCauseExplorer />
+        ) : view === "knowledge" ? (
           <KnowledgeExplorer />
         ) : (
           <section className="grid gap-5 py-8 md:grid-cols-3">
@@ -127,14 +137,14 @@ function App() {
                 <RoadmapItem label="Incident lifecycle" />
                 <RoadmapItem label="Evidence tracking" />
                 <RoadmapItem label="Local knowledge retrieval" />
-                <RoadmapItem label="AI reasoning (later phase)" muted />
+                <RoadmapItem label="Validated AI root-cause analysis" />
               </ul>
             </article>
           </section>
         )}
 
         <footer className="border-t border-slate-800 pt-5 text-sm text-slate-500">
-          Phase 5 provides local top‑K knowledge retrieval. It does not perform root-cause reasoning or execute remediation.
+          Phase 6 adds evidence-linked AI root-cause analysis. Results are advisory; the application does not execute remediation.
         </footer>
       </div>
     </main>
